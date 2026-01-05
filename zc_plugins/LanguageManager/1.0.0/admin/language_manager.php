@@ -9,14 +9,25 @@
 
 require('includes/application_top.php');
 
-$db_template = $db->Execute("SELECT template_dir FROM " . DB_PREFIX . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
-$active_template = $db_template->fields['template_dir'];
-
 // determine target language
 // check input, sanitize, and default to 'english'
 $target_language = (isset($_REQUEST['language_target']) && preg_match('/^[a-z0-9_-]+$/i', $_REQUEST['language_target']))
     ? $_REQUEST['language_target']
     : 'english';
+
+$db_template_set = $db->Execute(
+                                "SET @temp_language =
+                                (SELECT languages_id FROM " . TABLE_LANGUAGES . " lg
+                                INNER JOIN " . TABLE_TEMPLATE_SELECT . " ts
+                                ON ts.template_language = lg.languages_id
+                                WHERE lg.directory = '" . $target_language . "')"
+                                );
+$db_template = $db->Execute(
+                            "SELECT template_dir FROM " . TABLE_TEMPLATE_SELECT . "
+                            WHERE (@temp_language IS NULL AND template_language = 0)
+                                OR (template_language = CAST(@temp_language AS UNSIGNED))"
+                            );
+$active_template = $db_template->fields['template_dir'];
 
 // dynamic paths
 $base_lang_dir = DIR_FS_CATALOG_LANGUAGES . $target_language . '/';
