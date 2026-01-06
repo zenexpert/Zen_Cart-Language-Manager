@@ -397,14 +397,10 @@ if (is_dir($base_lang_dir)) {
                         <select name="source_language" class="form-control">
                             <?php
                             // scan for available source languages
-                            $source_dirs = glob(DIR_FS_CATALOG_LANGUAGES . '*', GLOB_ONLYDIR);
-                            foreach($source_dirs as $dir) {
-                                $lname = basename($dir);
-                                // skip system/hidden folders
-                                if ($lname === '.' || $lname === '..' || $lname === 'classic') continue;
-
-                                // default to english being selected
-                                $selected = ($lname === 'english') ? 'selected' : '';
+                            $source_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . TABLE_LANGUAGES);
+                            foreach($source_languages_directories as $source_lang_dir) {
+                                $lname = $source_lang_dir['directory'];
+                                $selected = ($target_language == $lname) ? 'selected' : '';
                                 echo "<option value='$lname' $selected>" . ucfirst($lname) . "</option>";
                             }
                             ?>
@@ -461,7 +457,7 @@ if (is_dir($base_lang_dir)) {
                                     <label><?php echo TEXT_TARGET_LANGUAGE; ?></label>
                                     <select name="language_target" class="form-control" onchange="this.form.submit()">
                                         <?php
-                                        $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . DB_PREFIX . TABLE_LANGUAGES . ';');
+                                        $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . TABLE_LANGUAGES);
                                         foreach($installed_languages_directories as $inst_lang_dir) {
                                             $lname = $inst_lang_dir['directory'];
                                             $selected = ($target_language == $lname) ? 'selected' : '';
